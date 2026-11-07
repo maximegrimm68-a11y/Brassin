@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#17120e">
+<title>Brassin — Calculs</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#17120e; --card:#231b15; --card2:#2d231b; --line:#3a2e24;
+  --tx:#f3ebe2; --mute:#b3a596; --dim:#857666;
+  --amber:#f2a541; --amber2:#ffcf87; --ok:#5cc98a; --ko:#ff7a6b;
+  --r:16px;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f6f1ea; --card:#fff; --card2:#f3ece3; --line:#e2d7ca;
+    --tx:#231a12; --mute:#6c5d4e; --dim:#9a8a79; --amber:#b86e0b; --amber2:#8a5005; --ok:#1d8a4f; --ko:#c2382a; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);
+  font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);
+  display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
+header h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-.01em}
+.iconbtn{background:none;border:0;color:var(--mute);padding:8px;border-radius:12px;cursor:pointer}
+.iconbtn svg{width:26px;height:26px;display:block}
+main{padding:0 14px 110px;max-width:560px;margin:0 auto}
+section.tab{display:none}
+section.tab.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px}
+.card h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:0 0 12px}
+.hint{font-size:13px;color:var(--dim);margin:8px 0 0}
+.row{display:flex;gap:10px}
+.row>.field{flex:1;min-width:0}
+.field{margin:0 0 12px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:14px;color:var(--mute);margin:0 0 6px}
+.inp{display:flex;align-items:center;background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:0 14px;height:58px}
+.inp:focus-within{border-color:var(--amber)}
+.inp input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--tx);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;padding:0}
+.inp input::placeholder{color:var(--dim);font-weight:400}
+.inp .u{color:var(--dim);font-size:16px;margin-left:8px;white-space:nowrap}
+.seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:3px;margin:0 0 10px}
+.seg button{flex:1;border:0;background:none;color:var(--mute);font:inherit;font-size:15px;font-weight:600;padding:9px 6px;border-radius:9px;cursor:pointer}
+.seg button.on{background:var(--amber);color:#1a1108}
+.chips{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+.chips button{flex:1;border:1.5px solid var(--line);background:var(--card2);color:var(--tx);font:inherit;font-weight:600;padding:9px 0;border-radius:10px;cursor:pointer;min-width:56px}
+.chips button.on{border-color:var(--amber);color:var(--amber)}
+.res{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big .v{font-size:44px;font-weight:800;color:var(--amber2);font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.05}
+.big .l{color:var(--mute);font-size:15px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin-top:10px;font-size:16px}
+.kv span:nth-child(odd){color:var(--mute)}
+.kv span:nth-child(even){text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card2);border-radius:12px;padding:12px 14px}
+.tile .t{font-size:14px;color:var(--mute)}
+.tile .v{font-size:34px;font-weight:800;color:var(--amber2);font-variant-numeric:tabular-nums;line-height:1.1}
+.tile .s{font-size:13px;color:var(--dim)}
+.badge{display:flex;gap:10px;align-items:center;border-radius:12px;padding:12px 14px;font-weight:600}
+.badge.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.badge.ko{background:color-mix(in srgb,var(--ko) 18%,transparent);color:var(--ko)}
+.badge.na{background:var(--card2);color:var(--dim);font-weight:500}
+.warn{font-size:13px;color:var(--ko);margin-top:8px}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--amber);font-weight:600;font-size:15px;padding:4px 0}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);
+  display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+nav button{flex:1;border:0;background:none;color:var(--dim);font:inherit;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;border-radius:12px;cursor:pointer}
+nav button svg{width:26px;height:26px}
+nav button.on{color:var(--amber)}
+/* réglages */
+#settings{position:fixed;inset:0;z-index:10;background:var(--bg);overflow:auto;display:none}
+#settings.on{display:block}
+.pair{display:grid;grid-template-columns:1fr 1fr 40px;gap:8px;margin-bottom:8px;align-items:center}
+.pair>*{min-width:0}
+.pair .inp{height:48px;padding:0 10px}
+.pair .inp input{font-size:20px}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:700;font-size:16px;cursor:pointer;background:var(--amber);color:#1a1108}
+.btn.ghost{background:var(--card2);color:var(--tx);border:1px solid var(--line)}
+.btn+.btn{margin-top:8px}
+.btn:disabled{opacity:.35;cursor:default}
+.x{background:none;border:0;color:var(--dim);font-size:22px;cursor:pointer}
+.formula{font-size:13px;color:var(--mute);line-height:1.5}
+.formula b{color:var(--tx)}
+.formula code{font-size:12px;color:var(--amber2);word-break:break-word}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="title">Densité</h1>
+  <button class="iconbtn" id="openSettings" aria-label="Réglages">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
+
+<main>
+<!-- ============ DENSITÉ ============ -->
+<section class="tab on" id="tab-dens">
+  <div class="card">
+    <h2>Réfractomètre · moût non fermenté</h2>
+    <div class="field"><label for="d_bx">Lecture</label>
+      <div class="inp"><input id="d_bx" data-k="d_bx" inputmode="decimal" placeholder="12,0"><span class="u">°Bx</span></div></div>
+    <div class="res">
+      <div class="big"><span class="v" id="d_bx_sg">—</span><span class="l">densité</span></div>
+      <div class="kv"><span>Extrait</span><span id="d_bx_p">—</span><span>WCF appliqué</span><span id="d_bx_wcf">—</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Densimètre · correction de température</h2>
+    <div class="row">
+      <div class="field"><label for="d_sg">Lecture</label>
+        <div class="inp"><input id="d_sg" data-k="d_sg" inputmode="decimal" placeholder="1,048"></div></div>
+      <div class="field"><label for="d_t">Échantillon</label>
+        <div class="inp"><input id="d_t" data-k="d_t" inputmode="decimal" placeholder="20"><span class="u">°C</span></div></div>
+    </div>
+    <div class="res">
+      <div class="big"><span class="v" id="d_sgc">—</span><span class="l" id="d_sgc_l">densité corrigée</span></div>
+      <div class="kv"><span>Extrait</span><span id="d_sg_p">—</span><span>Réfracto devrait lire</span><span id="d_sg_bx">—</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FERMENTATION ============ -->
+<section class="tab" id="tab-ferm">
+  <div class="card">
+    <h2>Densité initiale (OG)</h2>
+    <div class="seg" data-seg="og_m"><button data-v="bx">Réfractomètre</button><button data-v="sg">Densimètre</button></div>
+    <div data-show="og_m:bx" class="field"><div class="inp"><input data-k="og_bx" inputmode="decimal" placeholder="12,0"><span class="u">°Bx</span></div></div>
+    <div data-show="og_m:sg" class="row">
+      <div class="field"><div class="inp"><input data-k="og_sg" inputmode="decimal" placeholder="1,048"></div></div>
+      <div class="field"><div class="inp"><input data-k="og_t" inputmode="decimal" placeholder="20"><span class="u">°C</span></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Densité finale (FG)</h2>
+    <div class="seg" data-seg="fg_m"><button data-v="bx">Réfractomètre</button><button data-v="sg">Densimètre</button></div>
+    <div data-show="fg_m:bx" class="field"><div class="inp"><input data-k="fg_bx" inputmode="decimal" placeholder="6,0"><span class="u">°Bx</span></div>
+      <p class="hint">Lecture brute : la correction alcool est appliquée automatiquement.</p></div>
+    <div data-show="fg_m:sg" class="row">
+      <div class="field"><div class="inp"><input data-k="fg_sg" inputmode="decimal" placeholder="1,010"></div></div>
+      <div class="field"><div class="inp"><input data-k="fg_t" inputmode="decimal" placeholder="20"><span class="u">°C</span></div></div>
+    </div>
+    <div class="res">
+      <div class="big"><span class="v" id="f_abv">—</span><span class="l">% vol</span></div>
+      <div class="kv">
+        <span>OG</span><span id="f_og">—</span>
+        <span>FG</span><span id="f_fg">—</span>
+        <span>Atténuation apparente</span><span id="f_aa">—</span>
+        <span>Atténuation réelle</span><span id="f_ra">—</span>
+        <span>Extrait réel</span><span id="f_re">—</span>
+      </div>
+      <div class="warn" id="f_warn"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Fin de fermentation ?</h2>
+    <div class="field"><label>Lecture précédente (≥ 48 h avant la FG ci-dessus)</label>
+      <div class="inp"><input data-k="prev" inputmode="decimal" id="f_prev"><span class="u" id="f_prev_u">°Bx</span></div></div>
+    <div class="badge na" id="f_stab">Saisis OG, FG et la lecture précédente</div>
+    <p class="hint">Stable si l'écart entre les deux lectures corrigées est ≤ 0,001.</p>
+  </div>
+</section>
+
+<!-- ============ EMBOUTEILLAGE ============ -->
+<section class="tab" id="tab-bott">
+  <div class="badge ko" id="b_stabwarn" style="margin-bottom:14px;display:none">FG non confirmée stable : voir Fermentation</div>
+  <div class="card">
+    <h2>Carbonatation visée</h2>
+    <div class="chips" id="co2chips"><button data-c="2.2">2,2</button><button data-c="2.4">2,4</button><button data-c="2.6">2,6</button><button data-c="2.8">2,8</button></div>
+    <div class="field"><div class="inp"><input data-k="co2" id="b_co2" inputmode="decimal" placeholder="2,4"><span class="u">vol CO₂</span></div></div>
+    <div class="field"><label for="b_t">T° max atteinte depuis la fin de fermentation</label>
+      <div class="inp"><input data-k="bt" id="b_t" inputmode="decimal" placeholder="20"><span class="u">°C</span></div></div>
+    <div class="seg" data-seg="sug"><button data-v="suc">Sucre blanc</button><button data-v="dex">Dextrose</button></div>
+    <div class="res">
+      <div class="tiles">
+        <div class="tile"><div class="t">par 33 cL</div><div class="v" id="b_33">—</div><div class="s">g</div></div>
+        <div class="tile"><div class="t">par 75 cL</div><div class="v" id="b_75">—</div><div class="s">g</div></div>
+      </div>
+      <div class="kv"><span>CO₂ déjà dissous</span><span id="b_res">—</span><span>Sucre par litre</span><span id="b_gl">—</span></div>
+      <div class="warn" id="b_warn"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Lot</h2>
+    <div class="row">
+      <div class="field"><label>Bouteilles 33 cL</label><div class="inp"><input data-k="n33" inputmode="numeric" placeholder="0"></div></div>
+      <div class="field"><label>Bouteilles 75 cL</label><div class="inp"><input data-k="n75" inputmode="numeric" placeholder="0"></div></div>
+    </div>
+    <div class="kv"><span>Volume de bière</span><span id="b_vol">—</span><span>Sucre total</span><span id="b_tot">—</span></div>
+    <details>
+      <summary>Doser au sirop (seringue)</summary>
+      <div class="kv">
+        <span>Préparer</span><span id="s_prep">—</span>
+        <span>Dose 33 cL</span><span id="s_33">—</span>
+        <span>Dose 75 cL</span><span id="s_75">—</span>
+      </div>
+      <p class="hint">Sirop à 500 g/L : dissoudre le sucre dans l'eau bouillante, compléter au volume indiqué, refroidir. Quantité calculée avec 15 % de marge.</p>
+    </details>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button data-tab="dens" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M9 8h6l-1 13a2 2 0 0 1-4 0z"/><path d="M10 13h4"/></svg>Densité</button>
+  <button data-tab="ferm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10"/><path d="M8 3v5L4 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2L16 8V3"/><circle cx="10" cy="15" r="1"/><circle cx="14" cy="17" r="1"/><circle cx="13" cy="12.5" r=".6"/></svg>Fermentation</button>
+  <button data-tab="bott"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4v4l2 3v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V9l2-3z"/><path d="M8 13h8"/></svg>Embouteillage</button>
+</nav>
+
+<!-- ============ RÉGLAGES ============ -->
+<div id="settings">
+  <header><h1>Réglages</h1><button class="x" id="closeSettings" aria-label="Fermer">✕</button></header>
+  <main style="padding-bottom:40px">
+    <div class="card">
+      <h2>Réfractomètre</h2>
+      <div class="field"><label for="wcf">Facteur de correction du moût (WCF)</label>
+        <div class="inp"><input id="wcf" data-k="wcf" inputmode="decimal" placeholder="1,04"></div>
+        <p class="hint">Brix réel = Brix lu ÷ WCF. 1,04 est la moyenne publiée par Terrill : étalonne le tien ci-dessous.</p></div>
+    </div>
+
+    <div class="card">
+      <h2>Étalonner le WCF</h2>
+      <p class="hint" style="margin:0 0 12px">Sur moût <b>non fermenté</b>, même échantillon : Brix lu au réfracto et densité densimètre corrigée à 20 °C. 3 mesures ou plus, sur des densités différentes.</p>
+      <div class="pair" style="margin-bottom:4px"><span class="hint" style="margin:0">°Bx lu</span><span class="hint" style="margin:0">Densité corrigée</span><span></span></div>
+      <div id="pairs"></div>
+      <button class="btn ghost" id="addPair">+ Ajouter une mesure</button>
+      <div class="res">
+        <div class="big"><span class="v" id="cal_wcf">—</span><span class="l" id="cal_n"></span></div>
+        <button class="btn" id="useWcf" style="margin-top:12px">Utiliser ce WCF</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Densimètre</h2>
+      <div class="field"><label for="calT">Température d'étalonnage (inscrite sur la tige)</label>
+        <div class="inp"><input id="calT" data-k="calT" inputmode="decimal" placeholder="20"><span class="u">°C</span></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Formules utilisées</h2>
+      <div class="formula">
+        <p><b>°Plato → densité</b> : <code>SG = 1 + P / (258,6 − (P/258,2)·227,1)</code><br>
+        <b>Densité → °Plato</b> : <code>P = −616,868 + 1111,14·SG − 630,272·SG² + 135,997·SG³</code><br>Brix ≈ Plato pour le moût.</p>
+        <p><b>Correction T° densimètre</b> (polynôme de densité de l'eau, T en °F) : <code>SG<sub>corr</sub> = SG<sub>lue</sub> · f(T<sub>éch</sub>) / f(T<sub>étal</sub>)</code>, <code>f(T) = 1,00130346 − 1,34722124e-4·T + 2,04052596e-6·T² − 2,32820948e-9·T³</code></p>
+        <p><b>FG au réfractomètre</b> (Terrill, « new cubic », bière fermentée) : <code>FG = 1 − 0,0044993·OB + 0,011774·FB + 0,00027581·OB² − 0,0012717·FB² − 7,28e-6·OB³ + 6,3293e-5·FB³</code>, OB et FB = Brix lus ÷ WCF. Peu fiable au-delà d'OG ≈ 1,080.</p>
+        <p><b>Alcool</b> (Balling) : <code>ER = 0,1808·OE + 0,8192·EA</code> ; <code>ABW = (OE − ER) / (2,0665 − 0,010665·OE)</code> ; <code>ABV = ABW · FG / 0,7907</code> (densité relative de l'éthanol à 20/20 °C).<br>
+        Atténuation apparente = (OG − FG)/(OG − 1) ; réelle = 1 − ER/OE.</p>
+        <p><b>CO₂ résiduel</b> : <code>3,0378 − 0,050062·T + 0,00026555·T²</code> (T en °F, T max depuis la fin de fermentation).<br>
+        <b>Resucrage</b> (stœchiométrie, 1 vol = 1,977 g CO₂/L) : sucre blanc 3,84 g/L/vol (saccharose → 4 CO₂) ; dextrose monohydraté 4,45 g/L/vol (→ 2 CO₂).</p>
+      </div>
+    </div>
+    <button class="btn ghost" id="resetAll">Effacer toutes les saisies</button>
+  </main>
+</div>
+
+<script>
+/* ===== CALC:BEGIN — formules pures, testées hors navigateur ===== */
+const Calc = {
+  platoToSG: p => 1 + p / (258.6 - (p / 258.2) * 227.1),
+  sgToPlato: sg => -616.868 + 1111.14*sg - 630.272*sg*sg + 135.997*sg*sg*sg,
+  brixToSG: (bx, wcf) => Calc.platoToSG(bx / wcf),
+  _f: tC => { const F = tC*1.8 + 32; return 1.00130346 - 0.000134722124*F + 0.00000204052596*F*F - 0.00000000232820948*F*F*F; },
+  hydroCorr: (sg, tC, calC) => sg * Calc._f(tC) / Calc._f(calC),
+  terrill: (obc, fbc) => 1 - 0.0044993*obc + 0.011774*fbc + 0.00027581*obc**2 - 0.0012717*fbc**2 - 0.0000072800*obc**3 + 0.000063293*fbc**3,
+  alcohol: (og, fg) => {
+    const OE = Calc.sgToPlato(og), AE = Calc.sgToPlato(fg);
+    const RE = 0.1808*OE + 0.8192*AE;
+    const ABW = (OE - RE) / (2.0665 - 0.010665*OE);
+    return { OE, AE, RE, ABW, ABV: ABW * fg / 0.7907, AA: (og - fg) / (og - 1) * 100, RA: (1 - RE / OE) * 100 };
+  },
+  residualCO2: tC => { const F = tC*1.8 + 32; return 3.0378 - 0.050062*F + 0.00026555*F*F; },
+  CO2_G_PER_VOL: 1.977,
+  sugarYield: { suc: 4*44.01/342.30, dex: 2*44.01/198.17 },          // g CO2 / g sucre
+  sugarPerLiter: (target, tC, type) => Math.max(0, target - Calc.residualCO2(tC)) * Calc.CO2_G_PER_VOL / Calc.sugarYield[type],
+};
+/* ===== CALC:END ===== */
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const KEY = 'brassin-calc.v1';
+const DEF = { og_m:'bx', fg_m:'bx', sug:'suc', wcf:'1.04', calT:'20', co2:'2.4', pairs:[['',''],['',''],['','']], tab:'dens' };
+let S;
+try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) { S = Object.assign({}, DEF); }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+
+const num = v => { if (v == null) return NaN; const s = String(v).trim().replace(',', '.'); return s === '' ? NaN : Number(s); };
+const ok = x => Number.isFinite(x);
+const fr = (x, d) => ok(x) ? x.toFixed(d).replace('.', ',') : '—';
+const sgFmt = x => fr(x, 3);
+const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+const inRange = (x, a, b) => ok(x) && x >= a && x <= b;
+const wcf = () => { const w = num(S.wcf); return inRange(w, 0.9, 1.2) ? w : 1.04; };
+const calT = () => { const t = num(S.calT); return inRange(t, 0, 40) ? t : 20; };
+const tOr = (v) => { const t = num(v); return inRange(t, 0, 100) ? t : calT(); };
+
+/* lecture brute → densité corrigée selon le mode */
+function readSG(mode, bx, sg, t) {
+  if (mode === 'bx') { const b = num(bx); return inRange(b, 0, 40) ? Calc.brixToSG(b, wcf()) : NaN; }
+  const g = num(sg); return inRange(g, 0.980, 1.200) ? Calc.hydroCorr(g, tOr(t), calT()) : NaN;
+}
+/* FG corrigée : réfracto → Terrill avec OB = Brix réel de l'OG */
+function finalSG(og, fgMode, fbRaw, sgRaw, t) {
+  if (fgMode === 'sg') return readSG('sg', null, sgRaw, t);
+  const fb = num(fbRaw);
+  if (!ok(og) || !inRange(fb, 0, 40)) return NaN;
+  return Calc.terrill(Calc.sgToPlato(og), fb / wcf());
+}
+
+function render() {
+  /* Densité */
+  const bx = num(S.d_bx);
+  if (inRange(bx, 0, 40)) {
+    const g = Calc.brixToSG(bx, wcf());
+    set('d_bx_sg', sgFmt(g)); set('d_bx_p', fr(bx / wcf(), 1) + ' °P');
+  } else { set('d_bx_sg', '—'); set('d_bx_p', '—'); }
+  set('d_bx_wcf', fr(wcf(), 3));
+
+  const sgc = readSG('sg', null, S.d_sg, S.d_t);
+  set('d_sgc', ok(sgc) ? sgFmt(sgc) : '—');
+  set('d_sgc_l', 'densité à ' + fr(calT(), 0) + ' °C');
+  if (ok(sgc)) { const p = Calc.sgToPlato(sgc); set('d_sg_p', fr(p, 1) + ' °P'); set('d_sg_bx', fr(p * wcf(), 1) + ' °Bx'); }
+  else { set('d_sg_p', '—'); set('d_sg_bx', '—'); }
+
+  /* Fermentation */
+  const og = readSG(S.og_m, S.og_bx, S.og_sg, S.og_t);
+  const fg = finalSG(og, S.fg_m, S.fg_bx, S.fg_sg, S.fg_t);
+  set('f_og', ok(og) ? sgFmt(og) : '—');
+  set('f_fg', ok(fg) ? sgFmt(fg) : '—');
+  let warn = '';
+  if (ok(og) && ok(fg) && og > 1.001 && fg < og) {
+    const a = Calc.alcohol(og, fg);
+    set('f_abv', fr(a.ABV, 1)); set('f_aa', fr(a.AA, 0) + ' %'); set('f_ra', fr(a.RA, 0) + ' %'); set('f_re', fr(a.RE, 1) + ' °P');
+    if (S.fg_m === 'bx' && og > 1.080) warn = 'OG > 1,080 : la correction réfractomètre devient imprécise, contrôle au densimètre.';
+  } else {
+    ['f_abv','f_aa','f_ra','f_re'].forEach(i => set(i, '—'));
+    if (ok(og) && ok(fg) && fg >= og) warn = 'FG ≥ OG : vérifie les saisies.';
+  }
+  set('f_warn', warn);
+
+  /* Stabilité */
+  set('f_prev_u', S.fg_m === 'bx' ? '°Bx' : 'SG');
+  $('#f_prev').placeholder = S.fg_m === 'bx' ? '6,1' : '1,011';
+  const prev = finalSG(og, S.fg_m, S.prev, S.prev, S.fg_t);
+  const st = $('#f_stab'); let stable = null;
+  if (ok(fg) && ok(prev)) {
+    const d = Math.abs(prev - fg);
+    stable = d <= 0.0010 + 1e-9;
+    st.className = 'badge ' + (stable ? 'ok' : 'ko');
+    st.textContent = stable ? `✓ Stable (écart ${fr(d,3)}) : embouteillage possible`
+                            : `✗ Encore active (écart ${fr(d,3)}) : remesure dans 48 h`;
+  } else { st.className = 'badge na'; st.textContent = 'Saisis OG, FG et la lecture précédente'; }
+  $('#b_stabwarn').style.display = stable === true ? 'none' : 'flex';
+  $('#b_stabwarn').textContent = stable === false ? '✗ FG pas encore stable : ne pas embouteiller' : 'Stabilité de la FG non confirmée (onglet Fermentation)';
+
+  /* Embouteillage */
+  const co2 = num(S.co2), bt = num(S.bt);
+  $$('#co2chips button').forEach(b => b.classList.toggle('on', ok(co2) && Math.abs(Number(b.dataset.c) - co2) < 1e-6));
+  let gl = NaN, bw = '';
+  if (inRange(co2, 1, 5) && inRange(bt, 0, 40)) {
+    const res = Calc.residualCO2(bt);
+    set('b_res', fr(res, 2) + ' vol');
+    gl = Calc.sugarPerLiter(co2, bt, S.sug);
+    if (co2 <= res) bw = 'Le CO₂ déjà dissous dépasse la cible : pas de sucre à ajouter.';
+  } else set('b_res', '—');
+  set('b_33', fr(gl * 0.33, 1)); set('b_75', fr(gl * 0.75, 1)); set('b_gl', ok(gl) ? fr(gl, 2) + ' g/L' : '—');
+  set('b_warn', bw);
+
+  const n33 = Math.max(0, Math.floor(num(S.n33) || 0)), n75 = Math.max(0, Math.floor(num(S.n75) || 0));
+  const vol = n33 * 0.33 + n75 * 0.75;
+  set('b_vol', vol > 0 ? fr(vol, 2) + ' L' : '—');
+  const tot = gl * vol;
+  set('b_tot', vol > 0 && ok(gl) ? fr(tot, 1) + ' g' : '—');
+  if (ok(gl) && gl > 0) {
+    const sugar = vol > 0 ? Math.ceil(tot * 1.15) : 50;
+    set('s_prep', `${sugar} g → ${sugar * 2} mL`);
+    set('s_33', fr(gl * 0.33 * 2, 1) + ' mL'); set('s_75', fr(gl * 0.75 * 2, 1) + ' mL');
+  } else ['s_prep','s_33','s_75'].forEach(i => set(i, '—'));
+
+  /* Étalonnage WCF */
+  const ws = S.pairs.map(([b, g]) => { const B = num(b), G = num(g);
+    return inRange(B, 2, 40) && inRange(G, 1.005, 1.2) ? B / Calc.sgToPlato(G) : NaN; }).filter(ok);
+  if (ws.length) {
+    const m = ws.reduce((a, b) => a + b, 0) / ws.length;
+    const sd = ws.length > 1 ? Math.sqrt(ws.reduce((a, b) => a + (b - m) ** 2, 0) / (ws.length - 1)) : NaN;
+    set('cal_wcf', fr(m, 3)); set('cal_n', `${ws.length} mesure${ws.length > 1 ? 's' : ''}` + (ok(sd) ? ` · écart-type ${fr(sd, 3)}` : ''));
+    $('#useWcf').disabled = false; $('#useWcf').dataset.w = m.toFixed(3);
+  } else { set('cal_wcf', '—'); set('cal_n', ''); $('#useWcf').disabled = true; }
+
+  /* visibilité des blocs liés aux sélecteurs */
+  $$('[data-seg]').forEach(seg => seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', S[seg.dataset.seg] === b.dataset.v)));
+  $$('[data-show]').forEach(el => { const [k, v] = el.dataset.show.split(':'); el.style.display = S[k] === v ? '' : 'none'; });
+}
+
+/* ---- liaisons ---- */
+$$('input[data-k]').forEach(inp => {
+  if (S[inp.dataset.k] != null) inp.value = String(S[inp.dataset.k]).replace('.', ',');
+  inp.addEventListener('input', () => { S[inp.dataset.k] = inp.value; save(); render(); });
+});
+$$('[data-seg]').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; S[seg.dataset.seg] = b.dataset.v; save(); render();
+}));
+$('#co2chips').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.co2 = b.dataset.c; $('#b_co2').value = b.dataset.c.replace('.', ','); save(); render();
+});
+
+const TITLES = { dens: 'Densité', ferm: 'Fermentation', bott: 'Embouteillage' };
+function showTab(t) {
+  S.tab = t; save();
+  $$('section.tab').forEach(s => s.classList.toggle('on', s.id === 'tab-' + t));
+  $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  set('title', TITLES[t]); window.scrollTo(0, 0);
+}
+$$('nav button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+/* réglages */
+$('#openSettings').addEventListener('click', () => { $('#settings').classList.add('on'); });
+$('#closeSettings').addEventListener('click', () => { $('#settings').classList.remove('on'); render(); });
+function drawPairs() {
+  const box = $('#pairs'); box.innerHTML = '';
+  S.pairs.forEach((p, i) => {
+    const row = document.createElement('div'); row.className = 'pair';
+    row.innerHTML = `<div class="inp"><input inputmode="decimal" placeholder="12,5"></div><div class="inp"><input inputmode="decimal" placeholder="1,050"></div><button class="x" aria-label="Supprimer">✕</button>`;
+    const [a, b] = row.querySelectorAll('input');
+    a.value = p[0]; b.value = p[1];
+    a.addEventListener('input', () => { S.pairs[i][0] = a.value; save(); render(); });
+    b.addEventListener('input', () => { S.pairs[i][1] = b.value; save(); render(); });
+    row.querySelector('button').addEventListener('click', () => { S.pairs.splice(i, 1); save(); drawPairs(); render(); });
+    box.appendChild(row);
+  });
+}
+$('#addPair').addEventListener('click', () => { S.pairs.push(['', '']); save(); drawPairs(); });
+$('#useWcf').addEventListener('click', e => {
+  const w = e.currentTarget.dataset.w; if (!w) return;
+  S.wcf = w; $('#wcf').value = w.replace('.', ','); save(); render();
+  e.currentTarget.textContent = '✓ WCF ' + w.replace('.', ',') + ' appliqué';
+  setTimeout(() => { $('#useWcf').textContent = 'Utiliser ce WCF'; }, 1800);
+});
+let armed = false;
+$('#resetAll').addEventListener('click', e => {
+  if (!armed) { armed = true; e.currentTarget.textContent = 'Toucher encore pour confirmer'; setTimeout(() => { armed = false; $('#resetAll').textContent = 'Effacer toutes les saisies'; }, 3000); return; }
+  try { localStorage.removeItem(KEY); } catch(err) {}
+  location.reload();
+});
+
+drawPairs();
+showTab(S.tab in TITLES ? S.tab : 'dens');
+render();
+
+/* hors-ligne (ignoré si le navigateur le refuse) */
+if ('serviceWorker' in navigator) {
+  try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch(e) {}
+}
+</script>
+</body>
+</html>
