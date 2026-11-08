@@ -186,6 +186,11 @@ nav button.on{color:var(--amber)}
       </div>
       <div class="kv"><span>CO₂ déjà dissous</span><span id="b_res">—</span><span>Sucre par litre</span><span id="b_gl">—</span></div>
       <div class="warn" id="b_warn"></div>
+      <div class="tile" style="margin-top:12px">
+        <div class="t">Taux d'alcool final, après refermentation</div>
+        <div class="big"><span class="v" id="b_abv">—</span><span class="l">% vol</span></div>
+        <div class="s" id="b_abv_s">Saisis OG et FG dans Fermentation</div>
+      </div>
     </div>
   </div>
 
@@ -254,7 +259,8 @@ nav button.on{color:var(--amber)}
         <p><b>Alcool</b> (Balling) : <code>ER = 0,1808·OE + 0,8192·EA</code> ; <code>ABW = (OE − ER) / (2,0665 − 0,010665·OE)</code> ; <code>ABV = ABW · FG / 0,7907</code> (densité relative de l'éthanol à 20/20 °C).<br>
         Atténuation apparente = (OG − FG)/(OG − 1) ; réelle = 1 − ER/OE.</p>
         <p><b>CO₂ résiduel</b> : <code>3,0378 − 0,050062·T + 0,00026555·T²</code> (T en °F, T max depuis la fin de fermentation).<br>
-        <b>Resucrage</b> (stœchiométrie, 1 vol = 1,977 g CO₂/L) : sucre blanc 3,84 g/L/vol (saccharose → 4 CO₂) ; dextrose monohydraté 4,45 g/L/vol (→ 2 CO₂).</p>
+        <b>Resucrage</b> (stœchiométrie, 1 vol = 1,977 g CO₂/L) : sucre blanc 3,84 g/L/vol (saccharose → 4 CO₂) ; dextrose monohydraté 4,45 g/L/vol (→ 2 CO₂).<br>
+        <b>Alcool du resucrage</b> (même stœchiométrie) : éthanol = sucre × 0,538 (sucre blanc) ou × 0,465 (dextrose) ; <code>+% vol = g/L éthanol / 789,3 × 100</code>. Dilution par le sirop (≈ 1 %) négligée.</p>
       </div>
     </div>
     <button class="btn ghost" id="resetAll">Effacer toutes les saisies</button>
@@ -280,6 +286,9 @@ const Calc = {
   CO2_G_PER_VOL: 1.977,
   sugarYield: { suc: 4*44.01/342.30, dex: 2*44.01/198.17 },          // g CO2 / g sucre
   sugarPerLiter: (target, tC, type) => Math.max(0, target - Calc.residualCO2(tC)) * Calc.CO2_G_PER_VOL / Calc.sugarYield[type],
+  ETOH_G_PER_L: 789.3,                                                 // masse volumique éthanol à 20 °C
+  ethanolYield: { suc: 4*46.07/342.30, dex: 2*46.07/198.17 },          // g éthanol / g sucre
+  primingABV: (gl, type) => gl * Calc.ethanolYield[type] / Calc.ETOH_G_PER_L * 100,   // % vol ajouté
 };
 /* ===== CALC:END ===== */
 
@@ -334,9 +343,9 @@ function render() {
   const fg = finalSG(og, S.fg_m, S.fg_bx, S.fg_sg, S.fg_t);
   set('f_og', ok(og) ? sgFmt(og) : '—');
   set('f_fg', ok(fg) ? sgFmt(fg) : '—');
-  let warn = '';
+  let warn = '', abvBase = NaN;
   if (ok(og) && ok(fg) && og > 1.001 && fg < og) {
-    const a = Calc.alcohol(og, fg);
+    const a = Calc.alcohol(og, fg); abvBase = a.ABV;
     set('f_abv', fr(a.ABV, 1)); set('f_aa', fr(a.AA, 0) + ' %'); set('f_ra', fr(a.RA, 0) + ' %'); set('f_re', fr(a.RE, 1) + ' °P');
     if (S.fg_m === 'bx' && og > 1.080) warn = 'OG > 1,080 : la correction réfractomètre devient imprécise, contrôle au densimètre.';
   } else {
@@ -372,6 +381,14 @@ function render() {
   } else set('b_res', '—');
   set('b_33', fr(gl * 0.33, 1)); set('b_75', fr(gl * 0.75, 1)); set('b_gl', ok(gl) ? fr(gl, 2) + ' g/L' : '—');
   set('b_warn', bw);
+  if (ok(abvBase) && ok(gl)) {
+    const add = Calc.primingABV(gl, S.sug);
+    set('b_abv', fr(abvBase + add, 1));
+    set('b_abv_s', `bière ${fr(abvBase, 2)} + resucrage ${fr(add, 2)}`);
+  } else {
+    set('b_abv', '—');
+    set('b_abv_s', ok(abvBase) ? 'Saisis la carbonatation et la T° ci-dessus' : 'Saisis OG et FG dans Fermentation');
+  }
 
   const n33 = Math.max(0, Math.floor(num(S.n33) || 0)), n75 = Math.max(0, Math.floor(num(S.n75) || 0));
   const vol = n33 * 0.33 + n75 * 0.75;
